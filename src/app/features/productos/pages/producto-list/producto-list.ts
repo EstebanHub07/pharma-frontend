@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -18,6 +18,7 @@ import { ProductoService } from '../../services/producto-service';
 export class ProductoList implements OnInit {
   private readonly productoService = inject(ProductoService);
   private readonly categoriaService = inject(CategoriaService);
+  readonly categoriaId = input<string>();
 
   protected readonly pagina = signal(0);
   protected readonly tamanio = signal(10);
@@ -28,6 +29,9 @@ export class ProductoList implements OnInit {
   protected readonly categoriaFiltro = signal<number | null>(null);
   protected readonly cargando = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly nombreCategoriaFiltro = computed(
+    () => this.categorias().find((categoria) => categoria.id === this.categoriaFiltro())?.nombre ?? this.categoriaFiltro(),
+  );
 
   protected readonly productos = computed(() => {
     const filtro = this.categoriaFiltro();
@@ -36,6 +40,11 @@ export class ProductoList implements OnInit {
   });
 
   ngOnInit(): void {
+    const categoriaId = Number(this.categoriaId());
+    if (Number.isInteger(categoriaId) && categoriaId > 0) {
+      this.categoriaFiltro.set(categoriaId);
+      this.tamanio.set(100);
+    }
     this.categoriaService.listar().subscribe({
       next: (datos) => this.categorias.set(datos),
       error: (err: HttpErrorResponse) => this.error.set(mensajeError(err)),

@@ -7,7 +7,7 @@
   <div class="filtros">
     <label>
       Categoría
-      <select class="input" (change)="filtrarPorCategoria($any($event.target).value)">
+      <select class="input" [value]="categoriaFiltro() ?? ''" (change)="filtrarPorCategoria($any($event.target).value)">
         <option value="">Todas</option>
         @for (c of categorias(); track c.id) {
           <option [value]="c.id">{{ c.nombre }}</option>
@@ -26,6 +26,10 @@
 
   @if (error()) {
     <div class="alerta">{{ error() }}</div>
+  }
+
+  @if (categoriaFiltro(); as categoriaId) {
+    <p class="nota-filtro">Mostrando productos de la categoría {{ nombreCategoriaFiltro() ?? categoriaId }} en los primeros 100 registros.</p>
   }
 
   @if (cargando()) {
