@@ -10,3 +10,4 @@
 .acciones { display: flex; gap: 8px; }
 .vacio { text-align: center; color: #6b7280; padding: 24px; }
 .paginador { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; }
+.nota-filtro { margin: 0 0 16px; color: #0f2e5c; font-size: 14px; }
