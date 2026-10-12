@@ -1,0 +1,72 @@
+<section class="page">
+  <header class="page-header">
+    <div><h2>Nueva venta</h2><p>Busca al cliente y agrega productos a la venta.</p></div>
+    <a routerLink="/ventas" class="btn">Volver a ventas</a>
+  </header>
+
+  @if (error()) { <div class="alerta" role="alert">{{ error() }}</div> }
+
+  @if (cargando()) {
+    <p role="status">Cargando clientes y productos…</p>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="revisar()" class="venta-form">
+      <section class="card">
+        <h3>Cliente</h3>
+        @if (clienteElegido(); as cliente) {
+          <div class="seleccionado"><span>{{ cliente.apellidos }}, {{ cliente.nombres }} · DNI {{ cliente.dni }}</span><button type="button" class="btn" (click)="cambiarCliente()">Cambiar</button></div>
+        } @else {
+          <label for="buscar-cliente">Buscar por nombre, apellido o DNI</label>
+          <input id="buscar-cliente" class="input" [formControl]="buscarCliente" autocomplete="off" />
+          @if (buscarCliente.value) {
+            <div class="resultados" role="listbox" aria-label="Clientes encontrados">
+              @for (cliente of clientesEncontrados(); track cliente.id) {
+                <button type="button" role="option" (click)="elegirCliente(cliente)">{{ cliente.apellidos }}, {{ cliente.nombres }} · {{ cliente.dni }}</button>
+              } @empty { <p>Ningún cliente activo coincide con la búsqueda.</p> }
+            </div>
+          }
+          @if (form.controls.clienteId.touched && form.controls.clienteId.invalid) { <small class="error">Seleccione un cliente.</small> }
+        }
+      </section>
+
+      <section class="card">
+        <h3>Productos</h3>
+        <label for="buscar-producto">Buscar por producto o categoría</label>
+        <input id="buscar-producto" class="input" [formControl]="buscarProducto" autocomplete="off" (keydown.enter)="agregarPrimero($event)" />
+        @if (buscarProducto.value) {
+          <div class="resultados" role="listbox" aria-label="Productos encontrados">
+            @for (producto of productosEncontrados(); track producto.id) {
+              <button type="button" role="option" (click)="agregarProducto(producto)">
+                <span>{{ producto.nombre }} · {{ producto.categoriaNombre }}</span><span>Stock: {{ producto.stock }} · En la venta: {{ cantidadEnDetalle(producto.id) }}</span>
+              </button>
+            } @empty { <p>Ningún producto activo coincide con la búsqueda.</p> }
+          </div>
+        }
+
+        <div formArrayName="detalles" class="lineas">
+          @for (linea of lineas(); track linea.linea; let i = $index) {
+            <div class="linea" [formGroupName]="i">
+              <div><strong>{{ linea.producto?.nombre }}</strong><span>{{ linea.producto?.categoriaNombre }} · Stock {{ linea.producto?.stock }}</span></div>
+              <label>Cantidad<input class="input" type="number" min="1" step="1" formControlName="cantidad" /></label>
+              <output>{{ linea.subtotal | currency: 'PEN' : 'S/ ' }}</output>
+              <button type="button" class="btn btn-peligro" [attr.aria-label]="'Quitar ' + linea.producto?.nombre" (click)="quitarLinea(i)">✕</button>
+              @if (excedeStock(i)) { <small class="error stock-error">Supera el stock disponible.</small> }
+            </div>
+          } @empty { <p class="vacio">Agrega al menos un producto.</p> }
+        </div>
+        @if (detalles.touched && detalles.invalid) { <small class="error">La venta debe incluir al menos un producto.</small> }
+      </section>
+
+      <footer class="card resumen"><strong>Total estimado</strong><output>{{ total() | currency: 'PEN' : 'S/ ' }}</output><button type="submit" class="btn btn-primary">Revisar venta</button></footer>
+    </form>
+  }
+
+  @if (confirmando()) {
+    <div class="modal-backdrop" role="presentation"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmacion">
+      <h2 id="titulo-confirmacion">Confirmar venta</h2>
+      <p>Cliente: <strong>{{ clienteElegido()?.apellidos }}, {{ clienteElegido()?.nombres }}</strong></p>
+      <p>{{ lineas().length }} producto(s) · Total estimado: <strong>{{ total() | currency: 'PEN' : 'S/ ' }}</strong></p>
+      <label class="check"><input type="checkbox" [checked]="imprimirAlRegistrar()" (change)="imprimirAlRegistrar.set($any($event.target).checked)" /> Imprimir el comprobante al registrar</label>
+      <div class="acciones"><button type="button" class="btn" (click)="volverAEditar()">Volver</button><button type="button" class="btn btn-primary" [disabled]="guardando()" (click)="confirmar()">{{ guardando() ? 'Registrando…' : 'Confirmar venta' }}</button></div>
+    </section></div>
+  }
+</section>

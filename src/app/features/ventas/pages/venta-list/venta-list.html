@@ -1,0 +1,18 @@
+<section class="page">
+  <header class="page-header no-imprimir"><h2>Consulta de ventas</h2><div class="botones"><button type="button" class="btn" [disabled]="!resultado().contenido.length" (click)="imprimirConsulta()">🖨 Imprimir consulta</button><a routerLink="nueva" class="btn btn-primary">+ Nueva venta</a></div></header>
+  <p class="solo-impresion">Filtros: {{ resumenFiltros() }}</p>
+  <form [formGroup]="filtros" (ngSubmit)="buscar()" class="card filtros no-imprimir">
+    <label>Cliente<select class="input" formControlName="clienteId"><option [ngValue]="null">Todos</option>@for (cliente of clientes(); track cliente.id) { <option [ngValue]="cliente.id">{{ cliente.apellidos }}, {{ cliente.nombres }}</option> }</select></label>
+    <label>Estado<select class="input" formControlName="estado"><option [ngValue]="null">Todos</option><option value="REGISTRADA">Registrada</option><option value="ANULADA">Anulada</option></select></label>
+    <label>Desde<input class="input" type="date" formControlName="desde" /></label>
+    <label>Hasta<input class="input" type="date" formControlName="hasta" /></label>
+    <div class="botones"><button type="button" class="btn" (click)="limpiar()">Limpiar</button><button type="submit" class="btn btn-primary">Buscar</button></div>
+  </form>
+  @if (error()) { <div class="alerta" role="alert">{{ error() }}</div> }
+  @if (cargando()) { <p role="status">Buscando ventas…</p> } @else {
+    <table class="tabla"><thead><tr><th>N.º</th><th>Fecha</th><th>Cliente</th><th>Ítems</th><th class="monto">Total</th><th>Estado</th><th class="no-imprimir"></th></tr></thead><tbody>
+      @for (venta of resultado().contenido; track venta.id) { <tr><td>{{ venta.id }}</td><td>{{ venta.fecha | date: 'dd/MM/yyyy HH:mm' }}</td><td>{{ venta.clienteNombre }}</td><td>{{ venta.detalles.length }}</td><td class="monto">{{ venta.total | currency: 'PEN' : 'S/ ' }}</td><td><span class="badge" [class.inactivo]="venta.estado === 'ANULADA'">{{ venta.estado }}</span></td><td class="no-imprimir acciones-fila"><a [routerLink]="[venta.id]" class="btn">Ver</a><a [routerLink]="[venta.id]" [queryParams]="{ imprimir: 1 }" class="btn" aria-label="Imprimir comprobante">🖨</a></td></tr> } @empty { <tr><td colspan="7" class="vacio">No hay ventas con esos filtros.</td></tr> }
+    </tbody></table>
+    <footer class="paginador"><span class="solo-impresion">Total visible: {{ totalPagina() | currency: 'PEN' : 'S/ ' }} · </span><span>Página {{ resultado().pagina + 1 }} de {{ paginasMostradas() }} · {{ resultado().totalElementos }} ventas</span><button type="button" class="btn no-imprimir" [disabled]="resultado().pagina === 0" (click)="irA(resultado().pagina - 1)">Anterior</button><button type="button" class="btn no-imprimir" [disabled]="resultado().ultima" (click)="irA(resultado().pagina + 1)">Siguiente</button></footer>
+  }
+</section>
