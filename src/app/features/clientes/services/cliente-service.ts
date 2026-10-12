@@ -12,4 +12,8 @@ export class ClienteService {
   listar(): Observable<Cliente[]> {
     return this.http.get<Cliente[]>(this.url);
   }
+
+  obtener(id: number): Observable<Cliente> {
+    return this.http.get<Cliente>(`${this.url}/${id}`);
+  }
 }

@@ -1,6 +1,6 @@
 <section class="page">
   <header class="page-header no-imprimir"><h2>Consulta de ventas</h2><div class="botones"><button type="button" class="btn" [disabled]="!resultado().contenido.length" (click)="imprimirConsulta()">🖨 Imprimir consulta</button><a routerLink="nueva" class="btn btn-primary">+ Nueva venta</a></div></header>
-  <p class="solo-impresion">Filtros: {{ resumenFiltros() }}</p>
+  <p class="solo-impresion">Filtros: {{ resumenFiltros() }} · Impreso el {{ fechaImpresion() | date: 'dd/MM/yyyy HH:mm' }}</p>
   <form [formGroup]="filtros" (ngSubmit)="buscar()" class="card filtros no-imprimir">
     <label>Cliente<select class="input" formControlName="clienteId"><option [ngValue]="null">Todos</option>@for (cliente of clientes(); track cliente.id) { <option [ngValue]="cliente.id">{{ cliente.apellidos }}, {{ cliente.nombres }}</option> }</select></label>
     <label>Estado<select class="input" formControlName="estado"><option [ngValue]="null">Todos</option><option value="REGISTRADA">Registrada</option><option value="ANULADA">Anulada</option></select></label>

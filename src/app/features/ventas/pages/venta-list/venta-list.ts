@@ -28,6 +28,7 @@ export class VentaList implements OnInit {
   protected readonly pagina = signal(0);
   protected readonly cargando = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly fechaImpresion = signal(new Date());
   protected readonly filtros = this.fb.group({
     clienteId: this.fb.control<number | null>(null),
     estado: this.fb.control<EstadoVenta | null>(null),
@@ -76,6 +77,7 @@ export class VentaList implements OnInit {
   }
 
   protected imprimirConsulta(): void {
+    this.fechaImpresion.set(new Date());
     this.document.defaultView?.print();
   }
 
