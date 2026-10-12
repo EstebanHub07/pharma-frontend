@@ -17,7 +17,7 @@
         } @else {
           <label for="buscar-cliente">Buscar por nombre, apellido o DNI</label>
           <input id="buscar-cliente" class="input" [formControl]="buscarCliente" autocomplete="off" />
-          @if (buscarCliente.value) {
+          @if (tieneBusquedaCliente()) {
             <div class="resultados" role="listbox" aria-label="Clientes encontrados">
               @for (cliente of clientesEncontrados(); track cliente.id) {
                 <button type="button" role="option" (click)="elegirCliente(cliente)">{{ cliente.apellidos }}, {{ cliente.nombres }} · {{ cliente.dni }}</button>
@@ -32,7 +32,7 @@
         <h3>Productos</h3>
         <label for="buscar-producto">Buscar por producto o categoría</label>
         <input id="buscar-producto" class="input" [formControl]="buscarProducto" autocomplete="off" (keydown.enter)="agregarPrimero($event)" />
-        @if (buscarProducto.value) {
+        @if (tieneBusquedaProducto()) {
           <div class="resultados" role="listbox" aria-label="Productos encontrados">
             @for (producto of productosEncontrados(); track producto.id) {
               <button type="button" role="option" (click)="agregarProducto(producto)">

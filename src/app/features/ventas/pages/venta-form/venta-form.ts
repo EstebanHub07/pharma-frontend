@@ -54,11 +54,13 @@ export class VentaForm implements OnInit {
   private readonly textoProducto = toSignal(this.buscarProducto.valueChanges, { initialValue: '' });
   private readonly valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
+  protected readonly tieneBusquedaCliente = computed(() => this.textoCliente().trim().length > 0);
+  protected readonly tieneBusquedaProducto = computed(() => this.textoProducto().trim().length > 0);
   protected readonly clienteElegido = computed(() =>
     this.clientes().find((cliente) => cliente.id === this.form.controls.clienteId.value) ?? null,
   );
   protected readonly clientesEncontrados = computed(() => {
-    const texto = this.textoCliente();
+    const texto = this.textoCliente().trim();
     return texto
       ? this.clientes()
           .filter((cliente) => cliente.estado && coincide(texto, cliente.nombres, cliente.apellidos, cliente.dni))
@@ -66,7 +68,7 @@ export class VentaForm implements OnInit {
       : [];
   });
   protected readonly productosEncontrados = computed(() => {
-    const texto = this.textoProducto();
+    const texto = this.textoProducto().trim();
     return texto
       ? this.productos()
           .filter((producto) => producto.estado && coincide(texto, producto.nombre, producto.categoriaNombre))
