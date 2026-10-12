@@ -1,0 +1,15 @@
+<section class="page">
+  @if (error()) { <div class="alerta" role="alert">{{ error() }}</div> }
+  @if (venta(); as venta) {
+    @if (registrada() === '1') { <p class="exito no-imprimir">Venta registrada correctamente.</p> }
+    <article class="card comprobante" [class.anulada]="venta.estado === 'ANULADA'">
+      <header class="negocio"><div><strong class="marca">PharmaSoft</strong><span>Comprobante de venta</span></div><div class="numero"><span>Venta N.º</span><strong>{{ numero() }}</strong></div></header>
+      <dl class="datos"><div><dt>Cliente</dt><dd>{{ venta.clienteNombre }}</dd></div>@if (cliente(); as cliente) { <div><dt>DNI</dt><dd>{{ cliente.dni }}</dd></div> }<div><dt>Fecha</dt><dd>{{ venta.fecha | date: 'dd/MM/yyyy HH:mm' }}</dd></div><div><dt>Estado</dt><dd><span class="badge" [class.inactivo]="venta.estado === 'ANULADA'">{{ venta.estado }}</span></dd></div></dl>
+      <table class="tabla"><thead><tr><th>Producto</th><th class="monto">Precio</th><th class="monto">Cantidad</th><th class="monto">Subtotal</th></tr></thead><tbody>@for (detalle of venta.detalles; track detalle.productoId) { <tr><td>{{ detalle.productoNombre }}</td><td class="monto">{{ detalle.precio | currency: 'PEN' : 'S/ ' }}</td><td class="monto">{{ detalle.cantidad }}</td><td class="monto">{{ detalle.subtotal | currency: 'PEN' : 'S/ ' }}</td></tr> }</tbody></table>
+      <p class="total">{{ venta.detalles.length }} producto(s) · {{ unidades() }} unidad(es) · Total: {{ venta.total | currency: 'PEN' : 'S/ ' }}</p>
+      @if (venta.estado === 'ANULADA') { <p class="sello">ANULADA</p> }
+      <footer class="pie solo-impresion">Gracias por su compra. · Documento interno sin valor tributario · Impreso el {{ fechaImpresion() | date: 'dd/MM/yyyy HH:mm' }}</footer>
+      <div class="acciones no-imprimir"><a routerLink="/ventas" class="btn">Volver a ventas</a><a routerLink="/ventas/nueva" class="btn">Nueva venta</a><button type="button" class="btn btn-primary" (click)="imprimirComprobante()">🖨 Imprimir</button></div>
+    </article>
+  }
+</section>
