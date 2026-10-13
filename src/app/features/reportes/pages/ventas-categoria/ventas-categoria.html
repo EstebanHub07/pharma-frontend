@@ -1,0 +1,20 @@
+<section class="page">
+  <header class="page-header"><div><h2>Ventas por categoría</h2><p>Comparativo de unidades y montos registrados.</p></div></header>
+
+  <form [formGroup]="filtros" (ngSubmit)="generar()" class="card filtros">
+    <label>Desde<input class="input" type="date" formControlName="desde" /></label>
+    <label>Hasta<input class="input" type="date" formControlName="hasta" /></label>
+    <button type="submit" class="btn btn-primary" [disabled]="cargando()">{{ cargando() ? 'Generando…' : 'Generar' }}</button>
+  </form>
+
+  @if (error()) { <div class="alerta" role="alert">{{ error() }}</div> }
+  @if (cargando()) { <p role="status">Generando reporte…</p> }
+  @if (!cargando() && !error() && !reportes().length) { <p class="vacio">No hay ventas en el periodo seleccionado.</p> }
+  @if (!cargando() && reportes().length) {
+    <div class="tabla-contenedor"><table class="tabla"><thead><tr><th>Categoría</th><th class="numero">Unidades vendidas</th><th class="numero">Monto total</th><th>Comparación</th></tr></thead><tbody>
+      @for (reporte of reportes(); track reporte.categoriaId) {
+        <tr><td>{{ reporte.categoriaNombre }}</td><td class="numero">{{ reporte.cantidadVendida }}</td><td class="numero">{{ reporte.montoTotal | currency: 'PEN' : 'S/ ' }}</td><td><div class="barra-fondo" role="progressbar" [attr.aria-label]="'Monto de ' + reporte.categoriaNombre" [attr.aria-valuemin]="0" [attr.aria-valuemax]="100" [attr.aria-valuenow]="porcentaje(reporte)"><div class="barra" [style.width.%]="porcentaje(reporte)"></div></div></td></tr>
+      }
+    </tbody><tfoot><tr><th>Total</th><th class="numero">{{ totalUnidades() }}</th><th class="numero">{{ montoGeneral() | currency: 'PEN' : 'S/ ' }}</th><th></th></tr></tfoot></table></div>
+  }
+</section>
