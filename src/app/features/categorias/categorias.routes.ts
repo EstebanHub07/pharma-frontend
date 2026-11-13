@@ -1,8 +1,13 @@
 import { Routes } from '@angular/router';
-import { CategoriaList } from './pages/categoria-list/categoria-list';
-import { CategoriaForm } from './pages/categoria-form/categoria-form';
+const formulario = () =>
+  import('./pages/categoria-form/categoria-form').then((m) => m.CategoriaForm);
 export const CATEGORIAS_ROUTES: Routes = [
-  { path: '', component: CategoriaList, title: 'Categorías' },
-  { path: 'nuevo', component: CategoriaForm, title: 'Nueva categoría' },
-  { path: ':id/editar', component: CategoriaForm, title: 'Editar categoría' },
+  {
+    path: '',
+    title: 'Categorías',
+    loadComponent: () =>
+      import('./pages/categoria-list/categoria-list').then((m) => m.CategoriaList),
+  },
+  { path: 'nuevo', title: 'Nueva categoría', loadComponent: formulario },
+  { path: ':id/editar', title: 'Editar categoría', loadComponent: formulario },
 ];
