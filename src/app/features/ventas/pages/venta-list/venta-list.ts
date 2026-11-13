@@ -9,12 +9,13 @@ import { Cliente } from '../../../clientes/models/cliente.model';
 import { ClienteService } from '../../../clientes/services/cliente-service';
 import { EstadoVenta, FiltroVentas, Venta } from '../../models/venta.model';
 import { VentaService } from '../../services/venta-service';
+import { SiPermiso } from '../../../../shared/directives/si-permiso';
 
 const TAMANIO_PAGINA = 10;
 
 @Component({
   selector: 'app-venta-list',
-  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe, DatePipe, SiPermiso],
   templateUrl: './venta-list.html',
   styleUrl: './venta-list.css',
 })
