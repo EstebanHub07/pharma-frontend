@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpInterceptorFn } from '@angular/common/http';
-import { errorInterceptorInterceptor } from './error-interceptor';
+import { errorInterceptor } from './error-interceptor';
 
-describe('errorInterceptorInterceptor', () => {
+describe('errorInterceptor', () => {
   const interceptor: HttpInterceptorFn = (req, next) =>
-    TestBed.runInInjectionContext(() => errorInterceptorInterceptor(req, next));
+    TestBed.runInInjectionContext(() => errorInterceptor(req, next));
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
