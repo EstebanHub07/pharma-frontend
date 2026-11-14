@@ -1,16 +1,23 @@
 import { Routes } from '@angular/router';
 import { permisoGuard } from '../../core/guards/permiso-guard';
-import { VentaList } from './pages/venta-list/venta-list';
-import { VentaForm } from './pages/venta-form/venta-form';
-import { VentaDetalle } from './pages/venta-detalle/venta-detalle';
+// Cada página se descarga por separado: abrir la consulta de ventas ya no
+// trae el formulario de registro ni el comprobante (Sesión 13, autónoma A.2).
 export const VENTAS_ROUTES: Routes = [
-  { path: '', component: VentaList, title: 'Consulta de ventas' },
+  {
+    path: '',
+    title: 'Consulta de ventas',
+    loadComponent: () => import('./pages/venta-list/venta-list').then((m) => m.VentaList),
+  },
   {
     path: 'nueva',
-    component: VentaForm,
     title: 'Nueva venta',
     canActivate: [permisoGuard],
     data: { permiso: 'VENTAS_REGISTRAR' },
+    loadComponent: () => import('./pages/venta-form/venta-form').then((m) => m.VentaForm),
   },
-  { path: ':id', component: VentaDetalle, title: 'Detalle de venta' },
+  {
+    path: ':id',
+    title: 'Detalle de venta',
+    loadComponent: () => import('./pages/venta-detalle/venta-detalle').then((m) => m.VentaDetalle),
+  },
 ];
