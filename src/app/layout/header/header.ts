@@ -2,7 +2,6 @@ import { Component, inject, output } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth-service';
-import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-header',
   imports: [RouterLink, DatePipe],
@@ -12,8 +11,6 @@ import { environment } from '../../../environments/environment';
 export class Header {
   protected readonly auth = inject(AuthService);
   readonly toggleMenu = output<void>();
-  /** Swagger solo existe en el perfil dev del backend. */
-  protected readonly mostrarApi = !environment.production;
   salir(): void {
     this.auth.cerrarSesion();
   }

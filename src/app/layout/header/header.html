@@ -4,9 +4,7 @@
   <a routerLink="/inicio" class="marca">PharmaSoft</a>
   <nav class="menubar">
     <a routerLink="/inicio">Inicio</a>
-    @if (mostrarApi) {
-      <a href="http://localhost:8080/swagger-ui.html" target="_blank" rel="noopener">API</a>
-    }
+    <a href="http://localhost:8080/swagger-ui.html" target="_blank" rel="noopener">API</a>
   </nav>
   @if (auth.sesion(); as s) {
     <div class="usuario">
