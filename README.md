@@ -87,7 +87,6 @@ flowchart LR
 | Caché del navegador: `immutable` 1 año para JS/CSS, `no-cache` para `index.html` | Cumple | — |
 | Compresión | Cumple parcialmente | Solo gzip; evaluar Brotli |
 | Caché Redis con TTL e invalidación en cada escritura y venta | Cumple | — |
-| Invalidación aplicada al confirmar la transacción (`transactionAware`) | Cumple | — |
 | Degradación si Redis cae (`CacheErrorHandler`, `timeout: 500ms`) | Cumple | — |
 | Logs con `requestId`, log de acceso y rotación (10 MB × 14) | Cumple | — |
 | `requestId` en las respuestas de error y en los mensajes de la SPA | Cumple | — |
