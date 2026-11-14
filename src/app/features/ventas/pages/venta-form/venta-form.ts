@@ -92,7 +92,7 @@ export class VentaForm implements OnInit {
   ngOnInit(): void {
     forkJoin({
       clientes: this.clienteService.listar(),
-      productos: this.productoService.listar(0, 100, 'nombre', 'asc'),
+      productos: this.productoService.listar({ pagina: 0, tamanio: 100, ordenarPor: 'nombre', direccion: 'asc' }),
     }).subscribe({
       next: ({ clientes, productos }) => {
         this.clientes.set(clientes);

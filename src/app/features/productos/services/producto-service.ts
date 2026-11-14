@@ -2,7 +2,7 @@ import { inject, Service } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { PaginaResponse } from '../../../core/models/pagina-response';
+import { ConsultaPagina, Pagina } from '../../../core/models/pagina';
 import { Direccion, OrdenProducto, Producto, ProductoRequest } from '../models/producto.model';
 
 @Service()
@@ -10,18 +10,13 @@ export class ProductoService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/productos`;
 
-  listar(
-    pagina: number,
-    tamanio: number,
-    ordenarPor: OrdenProducto,
-    direccion: Direccion,
-  ): Observable<PaginaResponse<Producto>> {
+  listar(c: ConsultaPagina): Observable<Pagina<Producto>> {
     const params = new HttpParams()
-      .set('pagina', pagina)
-      .set('tamanio', tamanio)
-      .set('ordenarPor', ordenarPor)
-      .set('direccion', direccion);
-    return this.http.get<PaginaResponse<Producto>>(this.url, { params });
+      .set('pagina', c.pagina)
+      .set('tamanio', c.tamanio)
+      .set('ordenarPor', c.ordenarPor)
+      .set('direccion', c.direccion);
+    return this.http.get<Pagina<Producto>>(`${this.url}`, { params });
   }
 
   obtener(id: number): Observable<Producto> {
