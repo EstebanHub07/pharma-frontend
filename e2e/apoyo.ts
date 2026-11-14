@@ -3,7 +3,7 @@ import { expect, Page } from '@playwright/test';
 // Cuentas de prueba creadas por las migraciones V2/V3 de PharmaBackend.
 // Si cambiaste alguna contraseña, ajústala aquí.
 export const USUARIOS = {
-  admin: { usuario: 'admin', clave: 'password' },
+  admin: { usuario: 'admin', clave: 'password123' },
   vendedor: { usuario: 'vendedor', clave: 'password' },
   almacen: { usuario: 'almacenero', clave: 'password' },
 } as const;
