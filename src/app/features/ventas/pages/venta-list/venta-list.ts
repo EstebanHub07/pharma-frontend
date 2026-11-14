@@ -1,34 +1,59 @@
 import { CurrencyPipe, DatePipe, DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  numberAttribute,
+  signal,
+} from '@angular/core';
+import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { PaginaResponse } from '../../../../core/models/pagina-response';
+import { Router, RouterLink } from '@angular/router';
+import { catchError, debounceTime, of } from 'rxjs';
+import { Pagina } from '../../../../core/models/pagina';
 import { mensajeError } from '../../../../core/utils/https-errors';
-import { Cliente } from '../../../clientes/models/cliente.model';
 import { ClienteService } from '../../../clientes/services/cliente-service';
-import { EstadoVenta, FiltroVentas, Venta } from '../../models/venta.model';
+import { EstadoVenta, Venta } from '../../models/venta.model';
 import { VentaService } from '../../services/venta-service';
 import { SiPermiso } from '../../../../shared/directives/si-permiso';
+import { Paginador } from '../../../../shared/components/paginador/paginador';
 
-const TAMANIO_PAGINA = 10;
+const texto = (v: unknown): string | null => (typeof v === 'string' && v ? v : null);
 
 @Component({
   selector: 'app-venta-list',
-  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe, DatePipe, SiPermiso],
+  imports: [ReactiveFormsModule, RouterLink, CurrencyPipe, DatePipe, SiPermiso, Paginador],
   templateUrl: './venta-list.html',
   styleUrl: './venta-list.css',
 })
-export class VentaList implements OnInit {
+export class VentaList {
   private readonly fb = inject(FormBuilder);
   private readonly ventaService = inject(VentaService);
   private readonly clienteService = inject(ClienteService);
+  private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
 
-  protected readonly clientes = signal<Cliente[]>([]);
-  protected readonly pagina = signal(0);
-  protected readonly cargando = signal(false);
-  protected readonly error = signal<string | null>(null);
+  // Página y filtros llegan de la URL (?pagina=4&tamanio=10&clienteId=3&estado=REGISTRADA&desde=...&hasta=...)
+  readonly pagina = input(0, { transform: (v: unknown) => numberAttribute(v, 0) });
+  readonly tamanio = input(10, { transform: (v: unknown) => numberAttribute(v, 10) });
+  readonly clienteId = input<number | null, unknown>(null, {
+    transform: (v: unknown) => numberAttribute(v, 0) || null,
+  });
+  readonly estado = input<EstadoVenta | null, unknown>(null, {
+    transform: (v: unknown) => (texto(v) as EstadoVenta | null),
+  });
+  readonly desde = input<string | null, unknown>(null, { transform: texto });
+  readonly hasta = input<string | null, unknown>(null, { transform: texto });
+
+  protected readonly clientes = toSignal(
+    this.clienteService.listar().pipe(catchError(() => of([]))),
+    { initialValue: [] },
+  );
+  protected readonly errorFiltro = signal<string | null>(null);
   protected readonly fechaImpresion = signal(new Date());
   protected readonly filtros = this.fb.group({
     clienteId: this.fb.control<number | null>(null),
@@ -36,45 +61,67 @@ export class VentaList implements OnInit {
     desde: this.fb.control<string | null>(null),
     hasta: this.fb.control<string | null>(null),
   });
-  protected readonly resultado = signal<PaginaResponse<Venta>>({
-    contenido: [], pagina: 0, tamanio: TAMANIO_PAGINA, totalElementos: 0, totalPaginas: 0, ultima: true,
+
+  protected readonly ventas = rxResource({
+    params: () => ({
+      filtro: {
+        clienteId: this.clienteId(),
+        estado: this.estado(),
+        desde: this.desde(),
+        hasta: this.hasta(),
+      },
+      pagina: this.pagina(),
+      tamanio: this.tamanio(),
+    }),
+    stream: ({ params }) => this.ventaService.buscar(params.filtro, params.pagina, params.tamanio),
+  });
+
+  // Conserva la página anterior mientras llega la nueva (sin parpadeo)
+  protected readonly pag = linkedSignal<Pagina<Venta> | undefined, Pagina<Venta> | undefined>({
+    source: () => this.ventas.value(),
+    computation: (nueva, previa) => nueva ?? previa?.value,
+  });
+
+  protected readonly error = computed(() => {
+    if (this.errorFiltro()) return this.errorFiltro();
+    const err = this.ventas.error();
+    return err instanceof HttpErrorResponse ? mensajeError(err) : err ? 'No se pudo cargar la lista.' : null;
   });
   protected readonly totalPagina = computed(() =>
-    this.resultado()
-      .contenido.filter((venta) => venta.estado === 'REGISTRADA')
+    (this.pag()?.contenido ?? [])
+      .filter((venta) => venta.estado === 'REGISTRADA')
       .reduce((suma, venta) => suma + venta.total, 0),
   );
 
-  ngOnInit(): void {
-    this.clienteService.listar().subscribe({
-      next: (clientes) => this.clientes.set(clientes),
-      error: (error: HttpErrorResponse) => this.error.set(mensajeError(error)),
+  constructor() {
+    // La URL manda: el formulario refleja los filtros vigentes (también tras F5).
+    effect(() => {
+      this.filtros.setValue(
+        { clienteId: this.clienteId(), estado: this.estado(), desde: this.desde(), hasta: this.hasta() },
+        { emitEvent: false },
+      );
     });
-    this.cargar();
+    // Cambiar cualquier filtro vuelve a la primera página.
+    this.filtros.valueChanges
+      .pipe(debounceTime(300), takeUntilDestroyed())
+      .subscribe(() => this.aplicarFiltros());
   }
 
   protected buscar(): void {
-    const { desde, hasta } = this.filtros.getRawValue();
-    if (desde && hasta && desde > hasta) {
-      this.error.set('La fecha «desde» no puede ser posterior a la fecha «hasta».');
-      return;
-    }
-    this.pagina.set(0);
-    this.cargar();
+    this.aplicarFiltros();
   }
 
   protected limpiar(): void {
-    this.filtros.reset();
-    this.buscar();
+    this.filtros.reset({ clienteId: null, estado: null, desde: null, hasta: null }, { emitEvent: false });
+    this.aplicarFiltros();
   }
 
-  protected irA(pagina: number): void {
-    this.pagina.set(pagina);
-    this.cargar();
+  protected irAPagina(pagina: number): void {
+    this.navegar({ pagina });
   }
 
-  protected paginasMostradas(): number {
-    return Math.max(1, this.resultado().totalPaginas);
+  protected cambiarTamanio(tamanio: number): void {
+    this.navegar({ tamanio, pagina: 0 });
   }
 
   protected imprimirConsulta(): void {
@@ -83,31 +130,29 @@ export class VentaList implements OnInit {
   }
 
   protected resumenFiltros(): string {
-    const filtro = this.filtros.getRawValue();
-    const cliente = this.clientes().find((item) => item.id === filtro.clienteId);
+    const cliente = this.clientes().find((item) => item.id === this.clienteId());
     return [
       cliente ? `cliente ${cliente.apellidos}, ${cliente.nombres}` : '',
-      filtro.estado ? `estado ${filtro.estado}` : '',
-      filtro.desde ? `desde ${filtro.desde}` : '',
-      filtro.hasta ? `hasta ${filtro.hasta}` : '',
+      this.estado() ? `estado ${this.estado()}` : '',
+      this.desde() ? `desde ${this.desde()}` : '',
+      this.hasta() ? `hasta ${this.hasta()}` : '',
     ]
       .filter(Boolean)
       .join(' · ') || 'ninguno (todas las ventas)';
   }
 
-  private cargar(): void {
-    const filtro: FiltroVentas = this.filtros.getRawValue();
-    this.cargando.set(true);
-    this.error.set(null);
-    this.ventaService.buscar(filtro, this.pagina(), TAMANIO_PAGINA).subscribe({
-      next: (resultado) => {
-        this.resultado.set(resultado);
-        this.cargando.set(false);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.error.set(mensajeError(error));
-        this.cargando.set(false);
-      },
-    });
+  private aplicarFiltros(): void {
+    const { clienteId, estado, desde, hasta } = this.filtros.getRawValue();
+    if (desde && hasta && desde > hasta) {
+      this.errorFiltro.set('La fecha «desde» no puede ser posterior a la fecha «hasta».');
+      return;
+    }
+    this.errorFiltro.set(null);
+    // La página 7 del filtro anterior puede no existir con el filtro nuevo.
+    this.navegar({ clienteId, estado, desde, hasta, pagina: 0 });
+  }
+
+  private navegar(cambios: Record<string, string | number | null>): void {
+    this.router.navigate([], { queryParams: cambios, queryParamsHandling: 'merge' });
   }
 }
