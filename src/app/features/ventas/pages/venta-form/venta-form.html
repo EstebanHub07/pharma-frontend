@@ -38,7 +38,7 @@
               <button type="button" role="option" data-testid="opcion-producto" [attr.data-stock]="producto.stock" (click)="agregarProducto(producto)">
                 <span>{{ producto.nombre }} · {{ producto.categoriaNombre }}</span><span>Stock: {{ producto.stock }} · En la venta: {{ cantidadEnDetalle(producto.id) }}</span>
               </button>
-            } @empty { <p>Ningún producto activo coincide con la búsqueda.</p> }
+            } @empty { <p>Ningún producto activo con stock coincide con la búsqueda.</p> }
           </div>
         }
 

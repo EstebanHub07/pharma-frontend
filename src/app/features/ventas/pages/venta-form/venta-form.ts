@@ -71,7 +71,7 @@ export class VentaForm implements OnInit {
     const texto = this.textoProducto().trim();
     return texto
       ? this.productos()
-          .filter((producto) => producto.estado && coincide(texto, producto.nombre, producto.categoriaNombre))
+          .filter((producto) => producto.estado && producto.stock > 0 && coincide(texto, producto.nombre, producto.categoriaNombre))
           .slice(0, MAX_RESULTADOS)
       : [];
   });
