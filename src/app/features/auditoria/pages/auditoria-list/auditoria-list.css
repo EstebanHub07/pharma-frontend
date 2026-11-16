@@ -1,0 +1,5 @@
+.filtros { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+.filtros label { display: grid; gap: 4px; font-size: 14px; font-weight: 600; }
+.botones { display: flex; gap: 8px; }
+.vacio { text-align: center; color: #64748b; }
+@media (max-width: 720px) { .filtros { grid-template-columns: 1fr; } }

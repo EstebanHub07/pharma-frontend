@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { PaginaResponse } from '../../../core/models/pagina-response';
+import { Pagina } from '../../../core/models/pagina';
 import { FiltroVentas, Venta, VentaRequest } from '../models/venta.model';
 
 interface PaginaApiResponse<T> {
@@ -20,7 +20,7 @@ interface PaginaApiResponse<T> {
   last?: boolean;
 }
 
-const normalizarPagina = <T>(respuesta: PaginaApiResponse<T> | T[]): PaginaResponse<T> => {
+const normalizarPagina = <T>(respuesta: PaginaApiResponse<T> | T[]): Pagina<T> => {
   if (Array.isArray(respuesta)) {
     return {
       contenido: respuesta,
@@ -55,7 +55,7 @@ export class VentaService {
     return this.http.get<Venta>(`${this.url}/${id}`);
   }
 
-  buscar(filtro: FiltroVentas, pagina: number, tamanio = 10): Observable<PaginaResponse<Venta>> {
+  buscar(filtro: FiltroVentas, pagina: number, tamanio = 10): Observable<Pagina<Venta>> {
     let params = new HttpParams()
       .set('ordenarPor', 'fecha')
       .set('direccion', 'desc')

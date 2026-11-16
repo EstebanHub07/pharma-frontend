@@ -1,0 +1,40 @@
+<section class="page">
+  <header class="page-header"><h2>Auditoría</h2></header>
+  <form [formGroup]="filtros" class="card filtros">
+    <label>Usuario<input class="input" formControlName="usuario" placeholder="p. ej. vendedor" data-testid="filtro-usuario" /></label>
+    <label>Acción
+      <select class="input" formControlName="accion" data-testid="filtro-accion">
+        <option [ngValue]="null">Todas</option>
+        @for (a of acciones; track a) { <option [ngValue]="a">{{ a }}</option> }
+      </select>
+    </label>
+    <label>Desde<input class="input" type="date" formControlName="desde" /></label>
+    <label>Hasta<input class="input" type="date" formControlName="hasta" /></label>
+    <div class="botones"><button type="button" class="btn" (click)="limpiar()">Limpiar</button></div>
+  </form>
+  @if (error()) { <div class="alerta" role="alert">{{ error() }}</div> }
+  @if (pag(); as p) {
+    <table class="tabla" data-testid="tabla-auditoria">
+      <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Id</th><th>Detalle</th></tr></thead>
+      <tbody>
+        @for (e of p.contenido; track e.id) {
+          <tr>
+            <td>{{ e.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td>{{ e.usuario }}</td>
+            <td>{{ e.accion }}</td>
+            <td>{{ e.entidad }}</td>
+            <td>{{ e.entidadId ?? '—' }}</td>
+            <td>{{ e.detalle ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="vacio">No hay eventos con esos filtros.</td></tr>
+        }
+      </tbody>
+    </table>
+    <app-paginador
+      [pagina]="p.pagina" [totalPaginas]="p.totalPaginas"
+      [totalElementos]="p.totalElementos" [tamanio]="p.tamanio"
+      (cambioPagina)="irAPagina($event)"
+      (cambioTamanio)="cambiarTamanio($event)" />
+  } @else if (eventos.isLoading()) { <p role="status">Cargando bitácora…</p> }
+</section>
